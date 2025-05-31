@@ -19,8 +19,8 @@ export const GET_FEED = gql`
 `;
 
 export const GET_USER = gql`
-  query GetUser($id: ID!) {
-    user(id: $id) {
+  query GetUser($userId: ID!) {
+    getUser(id: $userId) {
       id
       username
       email

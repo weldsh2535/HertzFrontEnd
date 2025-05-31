@@ -9,6 +9,7 @@ import ErrorMessage from '../../components/Common/ErrorMessage';
 import LoadingIndicator from '../../components/Common/LoadingIndicator';
 import MediaPicker from '../../components/Common/MediaPicker';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width: screenWidth } = Dimensions.get('window');
 

@@ -10,13 +10,14 @@ import ErrorMessage from '../Common/ErrorMessage';
 export default function ProfileScreen({ navigation }) {
   const { user: currentUser } = useSelector((state) => state.auth);
   const { loading, error, data } = useQuery(GET_USER, {
-    variables: { id: currentUser.id },
+    variables: { userId: currentUser.id }, 
+    skip: !currentUser.id
   });
 
   if (loading) return <LoadingIndicator />;
   if (error) return <ErrorMessage message={error.message} />;
 
-  const user = data?.user || currentUser;
+  const user = data?.getUser || currentUser;
 
   const renderPost = ({ item }) => (
     <TouchableOpacity style={styles.postItem}>
@@ -40,11 +41,11 @@ export default function ProfileScreen({ navigation }) {
             <Text style={styles.statLabel}>Posts</Text>
           </View>
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>0</Text>
+            <Text style={styles.statNumber}>{user.followers?.length || 0}</Text>
             <Text style={styles.statLabel}>Followers</Text>
           </View>
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>0</Text>
+            <Text style={styles.statNumber}>{user.following?.length || 0}</Text>
             <Text style={styles.statLabel}>Following</Text>
           </View>
         </View>
@@ -57,7 +58,7 @@ export default function ProfileScreen({ navigation }) {
 
       <TouchableOpacity
         style={styles.editButton}
-        onPress={() => navigation.navigate('EditProfile')}
+        onPress={() => navigation.navigate('EditProfile', { user })}
       >
         <Text style={styles.editButtonText}>Edit Profile</Text>
       </TouchableOpacity>

@@ -1,9 +1,10 @@
+// components/Navigation/MainTabNavigator.js
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons, MaterialIcons, FontAwesome } from '@expo/vector-icons';
 import FeedScreen from '../components/Feed/FeedScreen';
 import CreatePostScreen from '../components/Post/CreatePostScreen';
-import ProfileScreen from '../components/Profile/ProfileScreen';
+import ProfileStackNavigator from '../components/Profile/ProfileStackNavigator';
 import { colors } from '../utils/styles';
 
 const Tab = createBottomTabNavigator();
@@ -40,12 +41,13 @@ export default function MainTabNavigator() {
         }}
       />
       <Tab.Screen
-        name="Profile"
-        component={ProfileScreen}
+        name="ProfileTab"
+        component={ProfileStackNavigator}
         options={{
           tabBarIcon: ({ color, size }) => (
             <FontAwesome name="user" size={size} color={color} />
           ),
+          title: 'Profile' // This sets the tab label
         }}
       />
     </Tab.Navigator>
