@@ -1,29 +1,26 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { Stack } from "expo-router";
+import React from "react";
+import { ApolloProvider } from '@apollo/client';
+import { Provider as ReduxProvider } from 'react-redux';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
-
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { PersistGate } from 'redux-persist/integration/react';
+import { store, persistor } from './src/store';
+import client from './src/apollo/client';
+import AppNavigator from './src/navigation/AppNavigator';
+import LoadingIndicator from './src/components/Common/LoadingIndicator';
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
-
-  if (!loaded) {
-    // Async font loading only occurs in development.
-    return null;
-  }
-
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <ReduxProvider store={store}>
+      <PersistGate loading={<LoadingIndicator color={''} />} persistor={persistor}>
+        <ApolloProvider client={client}>
+          <SafeAreaProvider>
+            <StatusBar style="light" />
+            <AppNavigator />
+          </SafeAreaProvider>
+        </ApolloProvider>
+      </PersistGate>
+    </ReduxProvider>
   );
 }
