@@ -13,7 +13,7 @@ import LoadingIndicator from './src/components/Common/LoadingIndicator';
 export default function RootLayout() {
   return (
     <ReduxProvider store={store}>
-      <PersistGate loading={<LoadingIndicator color={''} />} persistor={persistor}>
+      <PersistGate loading={<LoadingIndicator color={'white'} />} persistor={persistor}>
         <ApolloProvider client={client}>
           <SafeAreaProvider>
             <StatusBar style="light" />

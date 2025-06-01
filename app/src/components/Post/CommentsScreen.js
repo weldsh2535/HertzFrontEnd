@@ -1,16 +1,37 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, FlatList, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { useQuery, useMutation } from '@apollo/client';
-import { GET_POST_COMMENTS, ADD_COMMENT, ADD_REPLY } from '../../graphql/queries';
+import { GET_POST_COMMENTS } from '../../graphql/queries';
+import { ADD_COMMENT,ADD_REPLY } from '../../graphql/mutations';
 import { commonStyles, colors } from '../../utils/styles';
 import ErrorMessage from '../Common/ErrorMessage';
 import LoadingIndicator from '../Common/LoadingIndicator';
+import { Ionicons } from '@expo/vector-icons';
 
-export default function CommentsScreen({ route }) {
-  const { postId } = route.params;
+export default function CommentsScreen({ route, navigation }) {
+  console.log('CommentsScreen');
+  const { postId, commentCount } = route.params || {};
   const [newComment, setNewComment] = useState('');
   const [replyingTo, setReplyingTo] = useState(null);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    navigation.setOptions({
+      headerLeft: () => (
+        <TouchableOpacity 
+          onPress={() => navigation.goBack()}
+          style={{ marginLeft: 15 }}
+        >
+          <Ionicons name="arrow-back" size={24} color="white" />
+        </TouchableOpacity>
+      ),
+      headerStyle: {
+        backgroundColor: 'black',
+      },
+      headerTintColor: 'white',
+      title: `Comments (${commentCount || 0})`,
+    });
+  }, [commentCount]);
 
   const { loading, error: queryError, data, refetch } = useQuery(GET_POST_COMMENTS, {
     variables: { postId },

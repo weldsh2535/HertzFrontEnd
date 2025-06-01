@@ -19,9 +19,26 @@ export default function CreatePostScreen({ navigation }) {
   const [caption, setCaption] = useState('');
   const [error, setError] = useState('');
   const [uploading, setUploading] = useState(false);
-  const [token, setToken] = useState("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MzU5ZTc1ZmQwNjYxOTZjZDE5YjJmZiIsImlhdCI6MTc0ODUyODUzNiwiZXhwIjoxNzQ5MTMzMzM2fQ.QgNkRkBvP-3CJs4sOfOn4ynrqM27h0-API5HpGFgQVI");
+  const [token, setToken] = useState(null);
 
+  useEffect(() => {
+    const getToken = async () => {
+      try {
+        const storedToken = await AsyncStorage.getItem('token');
+        if (!storedToken) {
+          // If no token is found, redirect to login
+          navigation.replace('Login');
+          return;
+        }
+        setToken(storedToken);
+      } catch (err) {
+        console.error('Error reading token:', err);
+        setError('Authentication error');
+      }
+    };
 
+    getToken();
+  }, [navigation]);
 
   const handlePickMedia = async (type) => {
     try {
@@ -51,8 +68,13 @@ export default function CreatePostScreen({ navigation }) {
     setMediaType(null);
   };
 
-
   const handleCreatePost = async () => {
+    if (!token) {
+      setError('Please login to create a post');
+      navigation.replace('Login');
+      return;
+    }
+
     if (!media || !mediaType) {
       setError('Please select a photo or video');
       return;
@@ -108,7 +130,7 @@ export default function CreatePostScreen({ navigation }) {
       }
 
       // Make the request
-      const response = await fetch('http://192.168.0.139:4000/graphql', {
+      const response = await fetch('http://10.0.2.2:4000/graphql', {
         method: 'POST',
         headers: {
           'Accept': 'application/json',
@@ -133,12 +155,16 @@ export default function CreatePostScreen({ navigation }) {
       navigation.goBack();
     } catch (err) {
       console.error('Upload error:', err);
+      if (err.message.includes('Authentication')) {
+        // If there's an authentication error, clear the token and redirect to login
+        await AsyncStorage.removeItem('token');
+        navigation.replace('Login');
+      }
       setError(err.message || 'Upload failed');
     } finally {
       setUploading(false);
     }
   };
-
 
   return (
     <View style={[commonStyles.container, { paddingTop: 20 }]}>

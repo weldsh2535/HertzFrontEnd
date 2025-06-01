@@ -9,36 +9,57 @@ import {
   Animated,
   TouchableOpacity
 } from 'react-native';
-import Video from 'react-native-video';
-import { colors } from '../../utils/styles';
+import { Video } from 'expo-av';
 import { Ionicons } from '@expo/vector-icons';
-
+import { useMutation } from '@apollo/client';
+import { LIKE_POST } from '../../graphql/mutations';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
 const { height, width } = Dimensions.get('window');
 
 const FeedItem = ({ item, isActive, index }) => {
-  const [liked, setLiked] = useState(false);
+  const [liked, setLiked] = useState(item.liked || false);
   const [likeCount, setLikeCount] = useState(item.likeCount || 0);
   const videoRef = useRef(null);
   const [paused, setPaused] = useState(!isActive);
   const [showControls, setShowControls] = useState(false);
   const opacityAnim = useRef(new Animated.Value(0)).current;
+  const [error, setError] = useState('');
+  const navigation = useNavigation(); 
 
-  // Handle video play/pause based on visibility
+
+
+  // Update your useEffect for video handling:
   useEffect(() => {
-    if (isActive) {
-      setPaused(false);
-      // Workaround for auto-play issues
-      if (videoRef.current) {
-        setTimeout(() => {
-          videoRef.current?.seek(0);
-        }, 100);
+
+    const handleVideoPlayback = async () => {
+      if (isActive) {
+        setPaused(false);
+        try {
+          if (videoRef.current) {
+            await videoRef.current.setPositionAsync(0); // Replace seek(0)
+            await videoRef.current.playAsync();
+          }
+        } catch (error) {
+          console.error('Video playback error:', error);
+        }
+      } else {
+        setPaused(true);
+        setShowControls(false);
+        try {
+          if (videoRef.current) {
+            await videoRef.current.pauseAsync();
+          }
+        } catch (error) {
+          console.error('Video pause error:', error);
+        }
       }
-    } else {
-      setPaused(true);
-      setShowControls(false);
-    }
+    };
+
+    handleVideoPlayback();
   }, [isActive]);
 
+  // Update your toggleControls function:
   const toggleControls = () => {
     Animated.timing(opacityAnim, {
       toValue: showControls ? 0 : 1,
@@ -48,11 +69,102 @@ const FeedItem = ({ item, isActive, index }) => {
     setShowControls(!showControls);
   };
 
-  const handleLike = () => {
-    const newLiked = !liked;
-    setLiked(newLiked);
-    setLikeCount(newLiked ? likeCount + 1 : likeCount - 1);
 
+  // Video handling remains the same
+  useEffect(() => {
+    const handleVideoPlayback = async () => {
+      if (isActive) {
+        setPaused(false);
+        try {
+          if (videoRef.current) {
+            await videoRef.current.setPositionAsync(0);
+            await videoRef.current.playAsync();
+          }
+        } catch (error) {
+          console.error('Video playback error:', error);
+        }
+      } else {
+        setPaused(true);
+        setShowControls(false);
+        try {
+          if (videoRef.current) {
+            await videoRef.current.pauseAsync();
+          }
+        } catch (error) {
+          console.error('Video pause error:', error);
+        }
+      }
+    };
+
+    handleVideoPlayback();
+  }, [isActive]);
+
+  const [likePost] = useMutation(LIKE_POST, {
+    onError: (err) => {
+      console.error('Like error:', err);
+      setError(err.message);
+      setLiked(!liked);
+      setLikeCount(liked ? likeCount + 1 : likeCount - 1);
+    }
+  });
+
+  const handleLike = async () => {
+   
+    const newLiked = !liked;
+    const newLikeCount = newLiked ? likeCount + 1 : likeCount - 1;
+
+    // Get current user ID
+    const currentUser = await AsyncStorage.getItem('userData');
+    const userDatas = JSON.parse(currentUser);
+    // Optimistic update
+    setLiked(newLiked);
+    setLikeCount(newLikeCount);
+
+    try {
+      const result = await likePost({
+        variables: { postId: item.id },
+        optimisticResponse: {
+          __typename: 'Mutation',
+          likePost: {
+            __typename: 'Post',
+            id: item.id,
+            likeCount: newLikeCount,
+            likes: newLiked
+              ? [...(item.likes || []), { __typename: 'User', id: userDatas.id }]
+              : (item.likes || []).filter(like => like.id !== userDatas.id)
+          }
+        },
+        update: (cache, { data: { likePost } }) => {
+          cache.modify({
+            id: `Post:${item.id}`,
+            fields: {
+              likes: () => likePost.likes,
+              likeCount: () => likePost.likeCount
+            }
+          });
+        }
+      });
+
+      console.log('Like successful:', result);
+    } catch (err) {
+      console.error('Like failed:', {
+        error: err,
+        postId: item.id,
+        userId: currentUserId
+      });
+      setError(err.message);
+      setLiked(!newLiked);
+      setLikeCount(likeCount);
+    }
+  };
+  const handleCommentPress = () => {
+    console.log('Comment pressed');
+    console.log(item.id);
+    console.log(item.commentCount);
+    navigation.navigate('Comments', { 
+      postId: item.id,
+      commentCount: item.commentCount || 0
+    });
   };
 
   return (
@@ -64,19 +176,15 @@ const FeedItem = ({ item, isActive, index }) => {
               ref={videoRef}
               source={{ uri: item.mediaUrl }}
               style={styles.video}
-              paused={!isActive || paused}
+              shouldPlay={isActive && !paused}
+              isLooping
               resizeMode="cover"
-              repeat={true}
-              playInBackground={false}
-              playWhenInactive={false}
-              ignoreSilentSwitch="obey"
-              controls={false}
+              useNativeControls={false}
               onError={(error) => console.error('Video error:', error)}
-              bufferConfig={{
-                minBufferMs: 15000,
-                maxBufferMs: 30000,
-                bufferForPlaybackMs: 2500,
-                bufferForPlaybackAfterRebufferMs: 5000
+              onReadyForDisplay={() => {
+                if (isActive && videoRef.current) {
+                  videoRef.current.playAsync().catch(console.error);
+                }
               }}
             />
 
@@ -109,7 +217,10 @@ const FeedItem = ({ item, isActive, index }) => {
           <Text style={styles.actionText}>{likeCount}</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.actionButton}>
+        <TouchableOpacity 
+          onPress={handleCommentPress} 
+          style={styles.actionButton}
+        >
           <Ionicons name="chatbubble-outline" size={32} color="white" />
           <Text style={styles.actionText}>{item.commentCount || 0}</Text>
         </TouchableOpacity>

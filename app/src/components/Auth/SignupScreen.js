@@ -7,17 +7,43 @@ import { loginSuccess } from '../../actions/types';
 import { commonStyles, colors } from '../../utils/styles';
 import ErrorMessage from '../Common/ErrorMessage';
 import LoadingIndicator from '../Common/LoadingIndicator';
+import client from '../../apollo/client';  
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function SignupScreen({ navigation }) {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const dispatch = useDispatch();
 
   const [signup, { loading }] = useMutation(SIGNUP, {
-    onCompleted: (data) => {
-      dispatch(loginSuccess(data.signup.token, data.signup.user));
+    onCompleted: async (data) => {
+      if (!data?.register?.token) {
+        setError("Invalid Register response");
+        return;
+      }
+
+      try {
+        // Save token and user data to AsyncStorage
+        await AsyncStorage.setItem('token', data.register.token);
+        await AsyncStorage.setItem('userData', JSON.stringify({
+          id: data.register.user.id,
+          email: data.register.user.email,
+          role: data.register.user.role,
+        }));
+
+        // Reset Apollo Client cache
+        await client.resetStore();
+
+        // Navigate to Main screen
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Main' }],
+        });
+      } catch (err) {
+        setError("Failed to save Register data");
+        console.error("AsyncStorage error:", err);
+      }
     },
     onError: (err) => {
       setError(err.message);
@@ -29,7 +55,16 @@ export default function SignupScreen({ navigation }) {
       setError('Please fill in all fields');
       return;
     }
-    signup({ variables: { username, email, password } });
+    
+    signup({ 
+      variables: { 
+        input: { 
+          username,
+          email, 
+          password 
+        } 
+      } 
+    });
   };
 
   return (

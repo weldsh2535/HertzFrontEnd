@@ -2,7 +2,7 @@ import { LOGIN_REQUEST, LOGIN_SUCCESS, LOGIN_FAILURE, LOGOUT } from './types';
 import { LOGIN_USER } from '../graphql/queries';
 import client from '../apollo/client';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import * as SecureStore from 'expo-secure-store'; // For secure token storage
 
 export const loginSuccess = (token, user) => ({
   type: LOGIN_SUCCESS,
@@ -17,8 +17,11 @@ export const loginUser = (credentials) => {
         mutation: LOGIN_USER,
         variables: credentials,
       });
+      // Store token securely
+      await AsyncStorage.setItem('token', data?.login?.token);
 
-      await AsyncStorage.setItem('token', data.login.token);
+      // Store user data in AsyncStorage
+      await AsyncStorage.setItem('userData', JSON.stringify(data?.login?.user));
       
       dispatch({
         type: LOGIN_SUCCESS,
@@ -38,7 +41,9 @@ export const loginUser = (credentials) => {
 
 export const logout = () => {
   return async (dispatch) => {
-    await AsyncStorage.removeItem('token');
+    // Clear both storage locations
+    await SecureStore.deleteItemAsync('token');
+    await AsyncStorage.removeItem('userData');
     client.resetStore();
     dispatch({ type: LOGOUT });
   };

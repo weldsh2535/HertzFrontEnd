@@ -7,6 +7,8 @@ import { loginSuccess } from '../../actions/authActions';
 import { commonStyles, colors } from '../../utils/styles';
 import ErrorMessage from '../Common/ErrorMessage';
 import LoadingIndicator from '../Common/LoadingIndicator';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import client from '../../apollo/client';
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState('');
@@ -15,12 +17,37 @@ export default function LoginScreen({ navigation }) {
   const dispatch = useDispatch();
 
   const [login, { loading }] = useMutation(LOGIN, {
-    onCompleted: (data) => {
-      dispatch(loginSuccess(data.login.token, data.login.user));
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'Main' }],
-      });
+    onCompleted: async (data) => {
+
+      if (!data?.login?.token) {
+        setError("Invalid login response");
+        return;
+      }
+
+      try {
+        // Save token and user data to AsyncStorage
+        await AsyncStorage.setItem('token', data.login.token);
+        await AsyncStorage.setItem('userData', JSON.stringify({
+          id: data.login.user.id,
+          email: data.login.user.email,
+          role: data.login.user.role,
+        }));
+
+        // Reset Apollo Client cache
+        await client.resetStore();
+
+        // Dispatch login success action
+        dispatch(loginSuccess(data.login.token, data.login.user));
+
+        // Navigate to Main screen
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Main' }],
+        });
+      } catch (err) {
+        setError("Failed to save login data");
+        console.error("AsyncStorage error:", err);
+      }
     },
     onError: (err) => {
       setError(err.message);

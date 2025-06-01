@@ -2,7 +2,7 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons, MaterialIcons, FontAwesome } from '@expo/vector-icons';
-import FeedScreen from '../components/Feed/FeedScreen';
+import FeedStackNavigator from './FeedStackNavigator'; // Updated import
 import CreatePostScreen from '../components/Post/CreatePostScreen';
 import ProfileStackNavigator from '../components/Profile/ProfileStackNavigator';
 import { colors } from '../utils/styles';
@@ -24,7 +24,7 @@ export default function MainTabNavigator() {
     >
       <Tab.Screen
         name="Feed"
-        component={FeedScreen}
+        component={FeedStackNavigator} // Updated component
         options={{
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="home" size={size} color={color} />
@@ -47,7 +47,7 @@ export default function MainTabNavigator() {
           tabBarIcon: ({ color, size }) => (
             <FontAwesome name="user" size={size} color={color} />
           ),
-          title: 'Profile' // This sets the tab label
+          title: 'Profile'
         }}
       />
     </Tab.Navigator>

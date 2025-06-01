@@ -15,8 +15,8 @@ export const LOGIN = gql`
 `;
 
 export const SIGNUP = gql`
-  mutation Signup($username: String!, $email: String!, $password: String!) {
-    signup(username: $username, email: $email, password: $password) {
+  mutation Register($input: RegisterInput!) {
+    register(input: $input) {
       token
       user {
         id
@@ -29,8 +29,8 @@ export const SIGNUP = gql`
 `;
 
 export const CREATE_POST = gql`
-  mutation CreatePost($file: Upload!, $caption: String) {
-    createPost(file: $file, caption: $caption) {
+  mutation CreatePost($caption: String) {
+    createPost(input: { caption: $caption }) {
       id
       mediaUrl
       mediaType
@@ -40,6 +40,7 @@ export const CREATE_POST = gql`
         username
         avatar
       }
+      createdAt
     }
   }
 `;
@@ -48,6 +49,10 @@ export const LIKE_POST = gql`
   mutation LikePost($postId: ID!) {
     likePost(postId: $postId) {
       id
+      likes {
+        id
+        username
+      }
       likeCount
     }
   }
@@ -92,9 +97,10 @@ export const ADD_REPLY = gql`
   }
 `;
 
+
 export const UPDATE_PROFILE = gql`
-  mutation UpdateProfile($username: String, $email: String, $bio: String, $avatar: String) {
-    updateProfile(username: $username, email: $email, bio: $bio, avatar: $avatar) {
+  mutation UpdateProfile($input: UpdateProfileInput!, $file: Upload) {
+    updateProfile(input: $input, file: $file) {
       id
       username
       email

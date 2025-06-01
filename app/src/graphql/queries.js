@@ -8,7 +8,8 @@ export const GET_FEED = gql`
       mediaType
       caption
       createdAt
- 
+      likeCount
+      commentCount
       user {
         id
         username
@@ -38,6 +39,21 @@ export const GET_USER = gql`
     }
   }
 `;
+
+// export const GET_POST_COMMENTS = gql`
+//   query GetPostComments($postId: ID!) {
+//     postComments(postId: $postId) {
+//       id
+//       text
+//       createdAt
+//       user {
+//         id
+//         username
+//         avatar
+//       }
+//     }
+//   }
+// `;
 
 export const GET_POST_COMMENTS = gql`
   query GetPostComments($postId: ID!) {

@@ -4,6 +4,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { commonStyles, colors } from '../../utils/styles';
 import ErrorMessage from '../Common/ErrorMessage';
 import LoadingIndicator from '../Common/LoadingIndicator';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 export default function EditProfileScreen({ navigation, route }) {
@@ -16,8 +17,26 @@ export default function EditProfileScreen({ navigation, route }) {
   });
   const [error, setError] = useState('');
   const [uploading, setUploading] = useState(false);
-  const [token, setToken] = useState("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MzU5ZTc1ZmQwNjYxOTZjZDE5YjJmZiIsImlhdCI6MTc0ODUyODUzNiwiZXhwIjoxNzQ5MTMzMzM2fQ.QgNkRkBvP-3CJs4sOfOn4ynrqM27h0-API5HpGFgQVI");
+  const [token, setToken] = useState(null);
 
+  useEffect(() => {
+    const getToken = async () => {
+      try {
+        const storedToken = await AsyncStorage.getItem('token');
+        if (!storedToken) {
+          // If no token is found, redirect to login
+          navigation.replace('Login');
+          return;
+        }
+        setToken(storedToken);
+      } catch (err) {
+        console.error('Error reading token:', err);
+        setError('Authentication error');
+      }
+    };
+
+    getToken();
+  }, [navigation]);
 
   const handleChange = (name, value) => {
     setFormData({ ...formData, [name]: value });
@@ -104,7 +123,7 @@ export default function EditProfileScreen({ navigation, route }) {
       }
 
       // Make the request
-      const response = await fetch('http://192.168.0.139:4000/graphql', {
+      const response = await fetch('http://10.0.2.2:4000/graphql', {
         method: 'POST',
         headers: {
           'Accept': 'application/json',
@@ -126,7 +145,7 @@ export default function EditProfileScreen({ navigation, route }) {
         throw new Error(result.errors[0]?.message || 'Update failed');
       }
 
-      navigation.navigate('Profile', { updatedUser: result.data.updateProfile });
+      navigation.navigate('ProfileMain', { updatedUser: result.data.updateProfile });
     } catch (err) {
       console.error('Update error:', err);
       setError(err.message || 'Update failed');
@@ -213,3 +232,4 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
 });
+
