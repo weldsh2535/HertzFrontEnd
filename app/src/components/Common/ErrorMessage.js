@@ -2,25 +2,29 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { colors } from '../../utils/styles';
 
-export default function ErrorMessage({ message }) {
+const ErrorMessage = ({ message }) => {
+  if (!message) return null;
+  
   return (
     <View style={styles.container}>
       <Text style={styles.text}>{message}</Text>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.darkerBackground,
-    padding: 15,
+    backgroundColor: colors.error,
+    padding: 12,
     borderRadius: 8,
-    marginBottom: 15,
-    borderWidth: 1,
-    borderColor: colors.error,
+    marginBottom: 16,
+    width: '100%',
   },
   text: {
-    color: colors.error,
+    color: 'white',
+    fontSize: 14,
     textAlign: 'center',
   },
 });
+
+export default ErrorMessage;

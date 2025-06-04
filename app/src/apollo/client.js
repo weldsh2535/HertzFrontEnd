@@ -3,7 +3,7 @@ import { setContext } from '@apollo/client/link/context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const httpLink = createHttpLink({
-  uri: 'http://10.0.2.2:4000/graphql', 
+  uri: 'https://hertz-blond.vercel.app/api', 
 });
 
 const authLink = setContext(async (_, { headers }) => {
@@ -34,6 +34,7 @@ const client = new ApolloClient({
   }),
   defaultOptions: {
     watchQuery: {
+      returnPartialData: false,
       errorPolicy: 'all',
     },
     query: {

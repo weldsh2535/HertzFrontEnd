@@ -1,8 +1,8 @@
 import { gql } from '@apollo/client';
 
 export const GET_FEED = gql`
-  query GetFeed {
-    getFeed {
+  query GetFeed($limit: Int, $page: Int) {
+    getFeed(limit: $limit, page: $page) {
       id
       mediaUrl
       mediaType
@@ -10,6 +10,9 @@ export const GET_FEED = gql`
       createdAt
       likeCount
       commentCount
+      ratings {
+        value
+      }
       user {
         id
         username
@@ -56,26 +59,16 @@ export const GET_USER = gql`
 // `;
 
 export const GET_POST_COMMENTS = gql`
-  query GetPostComments($postId: ID!) {
-    postComments(postId: $postId) {
+query GetPostComments($postId: ID!) {
+  postComments(postId: $postId) {
+    id
+    text
+    createdAt
+    user {
       id
-      text
-      createdAt
-      user {
-        id
-        username
-        avatar
-      }
-      replies {
-        id
-        text
-        createdAt
-        user {
-          id
-          username
-          avatar
-        }
-      }
+      username
+      avatar
     }
   }
+}
 `;

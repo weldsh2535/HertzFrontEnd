@@ -62,7 +62,9 @@ export const RATE_POST = gql`
   mutation RatePost($postId: ID!, $rating: Int!) {
     ratePost(postId: $postId, rating: $rating) {
       id
-      rating
+      ratings {
+        value
+      }
     }
   }
 `;
@@ -73,11 +75,6 @@ export const ADD_COMMENT = gql`
       id
       text
       createdAt
-      user {
-        id
-        username
-        avatar
-      }
     }
   }
 `;

@@ -1,19 +1,9 @@
 import React from 'react';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import { ActivityIndicator } from 'react-native';
 import { colors } from '../../utils/styles';
 
-export default function LoadingIndicator({ color }) {
-  return (
-    <View style={styles.container}>
-      <ActivityIndicator size="large" color={color || colors.golden} />
-    </View>
-  );
-}
+const LoadingIndicator = ({ color = colors.golden, size = 'large' }) => {
+  return <ActivityIndicator color={color} size={size} />;
+};
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-});
+export default LoadingIndicator;

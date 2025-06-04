@@ -8,6 +8,7 @@ export const colors = {
   lightText: '#F5F5F5',
   secondaryText: '#BDBDBD',
   error: '#CF6679',
+  white: '#FFFFFF',
 };
 
 export const commonStyles = StyleSheet.create({
@@ -15,6 +16,7 @@ export const commonStyles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.darkBackground,
     paddingHorizontal: 16,
+    paddingTop: 50,
   },
   header: {
     fontSize: 24,
